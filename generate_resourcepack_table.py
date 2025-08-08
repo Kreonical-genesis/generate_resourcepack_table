@@ -5,22 +5,21 @@ import tempfile
 import shutil
 from pathlib import Path
 from html import escape
+from collections import defaultdict
 
 def extract_when_model(obj, item_name, results):
     if isinstance(obj, dict):
-        # Если есть нужная пара "when" и "model" (строка)
         if "when" in obj and "model" in obj:
             whens = obj["when"]
             model_data = obj["model"]
             model_path = model_data.get("model") if isinstance(model_data, dict) else None
 
             if isinstance(whens, str):
-                results.append((whens, model_path or "", item_name))
+                results.append((item_name, whens, model_path or ""))
             elif isinstance(whens, list):
                 for when_val in whens:
-                    results.append((when_val, model_path or "", item_name))
+                    results.append((item_name, when_val, model_path or ""))
 
-        # Рекурсивный проход по всем вложенным объектам
         for key, value in obj.items():
             extract_when_model(value, item_name, results)
 
@@ -35,17 +34,7 @@ def parse_when_model_file(file_path, item_name):
             data = json.load(f)
         except json.JSONDecodeError:
             return []
-
     extract_when_model(data, item_name, results)
-    return results
-
-
-    # Если это просто список (а не объект с "overrides")
-    if isinstance(data, list):
-        for entry in data:
-            when = entry.get("when", "")
-            model = entry.get("model", {}).get("model", "")
-            results.append((when, model, item_name))
     return results
 
 def process_resourcepack(zip_path):
@@ -67,7 +56,6 @@ def process_resourcepack(zip_path):
                 rows = parse_when_model_file(file_path, item_name)
                 results.extend(rows)
 
-
     shutil.rmtree(temp_dir)
     return results
 
@@ -75,22 +63,52 @@ def generate_html(tables):
     html = """<html>
 <head><meta charset="utf-8"><style>
 body { font-family: sans-serif; padding: 20px; }
-h2 { margin-top: 40px; }
-table { border-collapse: collapse; width: 100%; margin-bottom: 40px; }
+h1 { font-size: 28px; }
+h2 { margin-top: 40px; font-size: 22px; }
+details { margin-bottom: 20px; }
+summary { font-weight: bold; font-size: 18px; cursor: pointer; margin: 10px 0; }
+table { border-collapse: collapse; width: 100%; margin: 10px 0 20px 0; }
 th, td { border: 1px solid #ccc; padding: 6px 12px; text-align: left; }
 th { background: #f9f9f9; }
 </style></head><body>
-<h2>Список переименований / моделей / предметов </h2>
+<h1>📦 Отчёт по ресурспакам</h1>
 """
+
+    all_items_set = set()
+
     for pack_name, rows in tables.items():
         html += f"<h2>{escape(pack_name)}</h2>\n"
-        html += "<table><tr><th>Переименование</th><th>Модель</th><th>Предмет</th></tr>\n"
-        for rename, model, item in rows:
-            html += f"<tr><td>{escape(rename)}</td><td>{escape(model)}</td><td>{escape(item)}</td></tr>\n"
-        html += "</table>\n"
+
+        # Удалим дубликаты
+        unique_rows = list(set(rows))
+
+        # Группировка: item -> model -> [rename1, rename2, ...]
+        grouped = defaultdict(lambda: defaultdict(list))
+        for item, rename, model in unique_rows:
+            grouped[item][model].append(rename)
+            all_items_set.add(item)
+
+        html += f"<details open>\n<summary>Все предметы</summary>\n"
+
+        for item_name in sorted(grouped):
+            html += f"<details>\n<summary>{escape(item_name)}</summary>\n"
+            html += "<table><tr><th>Переименования</th><th>Предмет</th><th>Модель</th></tr>\n"
+            for model, renames in sorted(grouped[item_name].items()):
+                rename_str = ", ".join(sorted(set(renames)))
+                html += f"<tr><td>{escape(rename_str)}</td><td>{escape(item_name)}</td><td>{escape(model)}</td></tr>\n"
+            html += "</table></details>\n"
+
+        html += "</details>\n"
+
+    # Вкладка со списком всех предметов
+    html += f"<details>\n<summary>📋 Все предметы ({len(all_items_set)})</summary>\n<ul>\n"
+    for item in sorted(all_items_set):
+        html += f"<li>{escape(item)}</li>\n"
+    html += "</ul></details>\n"
 
     html += "</body></html>"
     return html
+
 
 def main():
     current_dir = Path(__file__).parent.resolve()
