@@ -79,7 +79,7 @@ th { background: #f9f9f9; }
     for pack_name, rows in tables.items():
         html += f"<h2>{escape(pack_name)}</h2>\n"
 
-        # Удалим дубликаты
+        # Удаление дубликатов
         unique_rows = list(set(rows))
 
         # Группировка: item -> model -> [rename1, rename2, ...]
@@ -134,3 +134,8 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+# todo модели, почему-то объеденились в одно и даже не повторяются 
+# Код сортировки считает переименованиями
+# другую руку всё ещё хавает - тоже самое с гуи
+# то же самое с луком
