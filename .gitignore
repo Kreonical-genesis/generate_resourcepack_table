@@ -5,3 +5,5 @@
 !.gitignore
 !generate_resourcepack_table.py
 !README.md
+!config.json
+!cfg.html

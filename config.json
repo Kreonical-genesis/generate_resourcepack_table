@@ -1,0 +1,19 @@
+{
+  "_comment_group_by_rename": "RU: Группировать одинаковые переименования в одну строку. EN: Group identical renames into one row.",
+  "group_by_rename": true,
+
+  "_comment_show_all_items_list": "RU: Показывать полный список предметов. EN: Show full list of all items.",
+  "show_all_items_list": true,
+
+  "_comment_columns_order": "RU: Порядок отображения столбцов. EN: Order of table columns.",
+  "columns_order": ["Переименования", "Предмет", "Модель"],
+
+  "_comment_table_class": "RU: CSS-класс таблицы. EN: CSS class for table styling.",
+  "table_class": "default-table",
+
+  "_comment_open_all_details": "RU: Открывать все <details> по умолчанию. EN: Open all <details> by default.",
+  "open_all_details": true,
+
+  "_comment_title": "RU: Заголовок страницы. EN: Page title.",
+  "title": "📦 Resourcepack report (Kreonical)"
+}
